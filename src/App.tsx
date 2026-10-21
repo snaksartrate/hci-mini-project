@@ -1,8 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState, type ComponentProps } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useAppState } from "./hooks/useAppState";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
-import { PORTFOLIO_DATA } from "./data/portfolioData";
+const PORTFOLIO_DATA = {
+  projects: [] as Array<NonNullable<ComponentProps<typeof ProjectDetailModal>["project"]>>,
+  personalInfo: { name: "Sanskar Tarte" },
+};
 
 // Layout Components
 import NavigationBar from "./components/layout/NavigationBar";
@@ -28,6 +31,11 @@ export default function App() {
     setScrollProgress,
     isDarkMode,
   } = useAppState();
+  const [isModalDismissed, setIsModalDismissed] = useState(false);
+
+  useEffect(() => {
+    setIsModalDismissed(false);
+  }, [activeModal]);
 
   // Register universal hotkey listeners (Ctrl+K, Esc, Ctrl+Z, /)
   useKeyboardShortcuts();
@@ -51,9 +59,10 @@ export default function App() {
     document.documentElement.classList.toggle("dark", isDarkMode);
   }, [isDarkMode]);
 
-  const activeProject = activeModal
+  const selectedProject = activeModal
     ? PORTFOLIO_DATA.projects.find((p) => p.id === activeModal) ?? null
     : null;
+  const activeProject = isModalDismissed ? null : selectedProject;
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors selection:bg-blue-500 selection:text-white">
@@ -95,7 +104,12 @@ export default function App() {
 
       {/* Case Study Detail Modal Layer */}
       <AnimatePresence>
-        {activeProject && <ProjectDetailModal project={activeProject} />}
+        {activeProject && (
+          <ProjectDetailModal
+            project={activeProject}
+            onClose={() => setIsModalDismissed(true)}
+          />
+        )}
       </AnimatePresence>
 
       {/* Universal Command Palette */}
